@@ -16,28 +16,22 @@ namespace SimpleCalculator
             string digit = btn.Text;
 
             if (isNewInput)
-            {
-                txtResult.Text = digit;
                 isNewInput = false;
-            }
-            else
-            {
-                txtResult.Text += digit;
-            }
 
             txtExpression.Text += digit;
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
-            firstNumber = int.Parse(txtResult.Text);
+            firstNumber = int.Parse(txtExpression.Text.Trim());
             txtExpression.Text += " + ";
             isNewInput = true;
         }
 
         private void BtnEqual_Click(object sender, EventArgs e)
         {
-            int secondNumber = int.Parse(txtResult.Text);
+            string[] parts = txtExpression.Text.Split('+');
+            int secondNumber = int.Parse(parts[1].Trim());
             int result = firstNumber + secondNumber;
 
             txtExpression.Text += " = " + result.ToString();
