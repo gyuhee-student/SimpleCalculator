@@ -68,6 +68,7 @@ namespace SimpleCalculator
                 isNewInput = false;
             if (HasLeadingZero()) return;
             txtExpression.Text += digit;
+            UpdateCurrentNumberDisplay();
             ScrollToEnd();
         }
 
@@ -75,6 +76,21 @@ namespace SimpleCalculator
         {
             txtExpression.SelectionStart = txtExpression.Text.Length;
             txtExpression.ScrollToCaret();
+        }
+
+        private void UpdateCurrentNumberDisplay()
+        {
+            if (currentOperator == "")
+            {
+                txtResult.Text = txtExpression.Text;
+            }
+            else
+            {
+                string delim = " " + currentOperator + " ";
+                string[] parts = txtExpression.Text.Split(new string[] { delim }, StringSplitOptions.None);
+                if (parts.Length >= 2)
+                    txtResult.Text = parts[1];
+            }
         }
 
         private void SetBtn(Button btn, string text, Color back, Color fore, int x, int y, int w, int h)
@@ -109,6 +125,7 @@ namespace SimpleCalculator
 
             if (HasLeadingZero()) return;
             txtExpression.Text += digit;
+            UpdateCurrentNumberDisplay();
             ScrollToEnd();
         }
 
@@ -122,7 +139,7 @@ namespace SimpleCalculator
                 // 결과 상태에서 연산자 누름 → 결과를 첫 번째 수로 이어서 계산
                 if (!int.TryParse(txtResult.Text, out firstNumber)) return;
                 txtExpression.Text = txtResult.Text + " " + newOperator + " ";
-                txtResult.Text = "";
+                txtResult.Text = firstNumber.ToString();
                 isResult = false;
             }
             else if (currentOperator != "" && !isNewInput)
@@ -131,13 +148,14 @@ namespace SimpleCalculator
                 BtnEqual_Click(null, EventArgs.Empty);
                 if (!int.TryParse(txtResult.Text, out firstNumber)) return;
                 txtExpression.Text = txtResult.Text + " " + newOperator + " ";
-                txtResult.Text = "";
+                txtResult.Text = firstNumber.ToString();
                 isResult = false;
             }
             else if (currentOperator != "" && isNewInput)
             {
                 // 숫자 입력 없이 연산자만 다시 누름 → 연산자만 교체
                 txtExpression.Text = firstNumber.ToString() + " " + newOperator + " ";
+                txtResult.Text = firstNumber.ToString();
             }
             else
             {
@@ -146,6 +164,7 @@ namespace SimpleCalculator
                 if (raw == "") return;
                 if (!int.TryParse(raw, out firstNumber)) return;
                 txtExpression.Text += " " + newOperator + " ";
+                txtResult.Text = firstNumber.ToString();
             }
 
             currentOperator = newOperator;
@@ -165,14 +184,17 @@ namespace SimpleCalculator
 
         private void BtnCE_Click(object sender, EventArgs e)
         {
+            isResult = false;
             if (currentOperator == "")
             {
                 txtExpression.Text = "";
+                txtResult.Text = "";
             }
             else
             {
                 string prefix = firstNumber.ToString() + " " + currentOperator + " ";
                 txtExpression.Text = prefix;
+                txtResult.Text = firstNumber.ToString();
             }
             isNewInput = true;
         }
@@ -182,6 +204,7 @@ namespace SimpleCalculator
             if (isResult) return; // 결과 표시 중엔 Del 무시
             if (txtExpression.Text.Length > 0)
                 txtExpression.Text = txtExpression.Text.Substring(0, txtExpression.Text.Length - 1);
+            UpdateCurrentNumberDisplay();
             ScrollToEnd();
         }
 
