@@ -55,6 +55,15 @@ namespace SimpleCalculator
 
         private void SimulateNumberClick(string digit)
         {
+            if (isResult)
+            {
+                // 결과 후 숫자 누르면 새 계산 시작
+                txtExpression.Text = "";
+                txtResult.Text = "";
+                firstNumber = 0;
+                currentOperator = "";
+                isResult = false;
+            }
             if (isNewInput)
                 isNewInput = false;
             if (HasLeadingZero()) return;
@@ -86,6 +95,15 @@ namespace SimpleCalculator
             Button btn = (Button)sender;
             string digit = btn.Text;
 
+            if (isResult)
+            {
+                // 결과 후 숫자 누르면 새 계산 시작
+                txtExpression.Text = "";
+                txtResult.Text = "";
+                firstNumber = 0;
+                currentOperator = "";
+                isResult = false;
+            }
             if (isNewInput)
                 isNewInput = false;
 
@@ -142,6 +160,7 @@ namespace SimpleCalculator
             firstNumber = 0;
             currentOperator = "";
             isNewInput = true;
+            isResult = false;
         }
 
         private void BtnCE_Click(object sender, EventArgs e)
@@ -160,6 +179,7 @@ namespace SimpleCalculator
 
         private void BtnDel_Click(object sender, EventArgs e)
         {
+            if (isResult) return; // 결과 표시 중엔 Del 무시
             if (txtExpression.Text.Length > 0)
                 txtExpression.Text = txtExpression.Text.Substring(0, txtExpression.Text.Length - 1);
             ScrollToEnd();
