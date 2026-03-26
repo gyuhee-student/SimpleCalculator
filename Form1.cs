@@ -2,9 +2,9 @@ namespace SimpleCalculator
 {
     public partial class Form1 : Form
     {
-        private int firstNumber = 0;
-        private string currentOperator = "";
-        private bool isNewInput = true;
+        private List<int> numbers = new List<int>();
+        private List<string> operators = new List<string>();
+        private string currentInput = "";
         private bool isResult = false;
 
         public Form1()
@@ -18,9 +18,7 @@ namespace SimpleCalculator
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar >= '0' && e.KeyChar <= '9')
-            {
                 SimulateNumberClick(e.KeyChar.ToString());
-            }
             else if (e.KeyChar == '+') btnAdd.PerformClick();
             else if (e.KeyChar == '-') btnSub.PerformClick();
             else if (e.KeyChar == '*') btnMul.PerformClick();
@@ -30,45 +28,141 @@ namespace SimpleCalculator
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-            {
-                btnEqual.PerformClick();
-            }
-            else if (e.KeyCode == Keys.Delete)
-            {
-                btnC.PerformClick();
-            }
-            else if (e.KeyCode == Keys.Back)
-            {
-                btnDel.PerformClick();
-            }
-        }
-
-        private bool HasLeadingZero()
-        {
-            string text = txtExpression.Text;
-            int i = text.Length - 1;
-            while (i >= 0 && char.IsDigit(text[i])) i--;
-            string currentNum = text.Substring(i + 1);
-            return currentNum == "0";
+            if (e.KeyCode == Keys.Enter) btnEqual.PerformClick();
+            else if (e.KeyCode == Keys.Delete) btnC.PerformClick();
+            else if (e.KeyCode == Keys.Back) btnDel.PerformClick();
         }
 
         private void SimulateNumberClick(string digit)
         {
             if (isResult)
             {
-                // 결과 후 숫자 누르면 새 계산 시작
-                txtExpression.Text = "";
-                txtResult.Text = "";
-                firstNumber = 0;
-                currentOperator = "";
+                numbers.Clear();
+                operators.Clear();
+                currentInput = "";
                 isResult = false;
             }
-            if (isNewInput)
-                isNewInput = false;
-            if (HasLeadingZero()) return;
-            txtExpression.Text += digit;
-            UpdateCurrentNumberDisplay();
+            if (currentInput == "0") return; // 선행 0 방지
+            currentInput += digit;
+            UpdateDisplay();
+        }
+
+        private void BtnNumber_Click(object sender, EventArgs e)
+        {
+            SimulateNumberClick(((Button)sender).Text);
+        }
+
+        private void BtnOperator_Click(object sender, EventArgs e)
+        {
+            string newOp = ((Button)sender).Text;
+
+            if (isResult)
+            {
+                // 결과 상태에서 연산자 누름 → 결과를 첫 번째 수로 이어서 계산
+                if (!int.TryParse(txtResult.Text, out int val)) return;
+                numbers.Clear();
+                operators.Clear();
+                numbers.Add(val);
+                currentInput = "";
+                isResult = false;
+                operators.Add(newOp);
+                UpdateDisplay();
+                return;
+            }
+
+            if (currentInput == "" && numbers.Count == 0) return;
+
+            if (currentInput != "")
+            {
+                if (!int.TryParse(currentInput, out int num)) return;
+                numbers.Add(num);
+                currentInput = "";
+                operators.Add(newOp);
+            }
+            else
+            {
+                // 숫자 입력 없이 연산자만 다시 누름 → 마지막 연산자 교체
+                if (operators.Count > 0)
+                    operators[operators.Count - 1] = newOp;
+            }
+
+            UpdateDisplay();
+        }
+
+        private void BtnEqual_Click(object sender, EventArgs e)
+        {
+            if (isResult) return;
+            if (currentInput == "" || operators.Count == 0) return;
+            if (!int.TryParse(currentInput, out int lastNum)) return;
+
+            var allNums = new List<int>(numbers) { lastNum };
+            string expr = BuildExpression(allNums, operators, "");
+
+            try
+            {
+                int result = Evaluate(new List<int>(allNums), new List<string>(operators));
+                txtExpression.Text = expr + " = " + result;
+                txtResult.Text = result.ToString();
+                numbers.Clear();
+                operators.Clear();
+                currentInput = "";
+                isResult = true;
+            }
+            catch (DivideByZeroException)
+            {
+                txtExpression.Text = "0으로 나눌 수 없습니다";
+                txtResult.Text = "";
+                numbers.Clear();
+                operators.Clear();
+                currentInput = "";
+                isResult = false;
+            }
+            ScrollToEnd();
+        }
+
+        private int Evaluate(List<int> nums, List<string> ops)
+        {
+            // 1단계: 곱하기·나누기 먼저 처리
+            int i = 0;
+            while (i < ops.Count)
+            {
+                if (ops[i] == "x" || ops[i] == "÷")
+                {
+                    if (ops[i] == "÷" && nums[i + 1] == 0)
+                        throw new DivideByZeroException();
+                    int res = ops[i] == "x" ? nums[i] * nums[i + 1] : nums[i] / nums[i + 1];
+                    nums[i] = res;
+                    nums.RemoveAt(i + 1);
+                    ops.RemoveAt(i);
+                }
+                else i++;
+            }
+
+            // 2단계: 더하기·빼기 처리
+            int total = nums[0];
+            for (int j = 0; j < ops.Count; j++)
+                total = ops[j] == "+" ? total + nums[j + 1] : total - nums[j + 1];
+            return total;
+        }
+
+        private string BuildExpression(List<int> nums, List<string> ops, string curIn)
+        {
+            string result = "";
+            for (int i = 0; i < nums.Count; i++)
+            {
+                result += nums[i].ToString();
+                if (i < ops.Count)
+                    result += " " + ops[i] + " ";
+            }
+            result += curIn;
+            return result;
+        }
+
+        private void UpdateDisplay()
+        {
+            txtExpression.Text = BuildExpression(numbers, operators, currentInput);
+            txtResult.Text = currentInput != "" ? currentInput :
+                             (numbers.Count > 0 ? numbers[numbers.Count - 1].ToString() : "");
             ScrollToEnd();
         }
 
@@ -78,19 +172,52 @@ namespace SimpleCalculator
             txtExpression.ScrollToCaret();
         }
 
-        private void UpdateCurrentNumberDisplay()
+        private void BtnC_Click(object sender, EventArgs e)
         {
-            if (currentOperator == "")
+            numbers.Clear();
+            operators.Clear();
+            currentInput = "";
+            isResult = false;
+            txtExpression.Text = "";
+            txtResult.Text = "";
+        }
+
+        private void BtnCE_Click(object sender, EventArgs e)
+        {
+            isResult = false;
+            if (operators.Count == 0)
             {
-                txtResult.Text = txtExpression.Text;
+                numbers.Clear();
+                currentInput = "";
+                txtExpression.Text = "";
+                txtResult.Text = "";
             }
             else
             {
-                string delim = " " + currentOperator + " ";
-                string[] parts = txtExpression.Text.Split(new string[] { delim }, StringSplitOptions.None);
-                if (parts.Length >= 2)
-                    txtResult.Text = parts[1];
+                // 현재 입력 중인 피연산자만 삭제
+                currentInput = "";
+                UpdateDisplay();
             }
+        }
+
+        private void BtnDel_Click(object sender, EventArgs e)
+        {
+            if (isResult) return;
+            if (currentInput.Length > 0)
+            {
+                currentInput = currentInput.Substring(0, currentInput.Length - 1);
+            }
+            else if (operators.Count > 0)
+            {
+                // 연산자 삭제 → 이전 숫자를 currentInput으로 복원
+                operators.RemoveAt(operators.Count - 1);
+                if (numbers.Count > 0)
+                {
+                    currentInput = numbers[numbers.Count - 1].ToString();
+                    numbers.RemoveAt(numbers.Count - 1);
+                }
+            }
+            UpdateDisplay();
         }
 
         private void SetBtn(Button btn, string text, Color back, Color fore, int x, int y, int w, int h)
@@ -104,145 +231,6 @@ namespace SimpleCalculator
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderColor = Color.LightGray;
             btn.Cursor = Cursors.Hand;
-        }
-
-        private void BtnNumber_Click(object sender, EventArgs e)
-        {
-            Button btn = (Button)sender;
-            string digit = btn.Text;
-
-            if (isResult)
-            {
-                // 결과 후 숫자 누르면 새 계산 시작
-                txtExpression.Text = "";
-                txtResult.Text = "";
-                firstNumber = 0;
-                currentOperator = "";
-                isResult = false;
-            }
-            if (isNewInput)
-                isNewInput = false;
-
-            if (HasLeadingZero()) return;
-            txtExpression.Text += digit;
-            UpdateCurrentNumberDisplay();
-            ScrollToEnd();
-        }
-
-        private void BtnOperator_Click(object sender, EventArgs e)
-        {
-            Button btn = (Button)sender;
-            string newOperator = btn.Text;
-
-            if (isResult)
-            {
-                // 결과 상태에서 연산자 누름 → 결과를 첫 번째 수로 이어서 계산
-                if (!int.TryParse(txtResult.Text, out firstNumber)) return;
-                txtExpression.Text = txtResult.Text + " " + newOperator + " ";
-                txtResult.Text = firstNumber.ToString();
-                isResult = false;
-            }
-            else if (currentOperator != "" && !isNewInput)
-            {
-                // 두 번째 숫자까지 입력된 상태 → 중간 계산 후 연속 연산
-                BtnEqual_Click(null, EventArgs.Empty);
-                if (!int.TryParse(txtResult.Text, out firstNumber)) return;
-                txtExpression.Text = txtResult.Text + " " + newOperator + " ";
-                txtResult.Text = firstNumber.ToString();
-                isResult = false;
-            }
-            else if (currentOperator != "" && isNewInput)
-            {
-                // 숫자 입력 없이 연산자만 다시 누름 → 연산자만 교체
-                txtExpression.Text = firstNumber.ToString() + " " + newOperator + " ";
-                txtResult.Text = firstNumber.ToString();
-            }
-            else
-            {
-                // 첫 번째 연산자 입력
-                string raw = txtExpression.Text.Trim();
-                if (raw == "") return;
-                if (!int.TryParse(raw, out firstNumber)) return;
-                txtExpression.Text += " " + newOperator + " ";
-                txtResult.Text = firstNumber.ToString();
-            }
-
-            currentOperator = newOperator;
-            isNewInput = true;
-            ScrollToEnd();
-        }
-
-        private void BtnC_Click(object sender, EventArgs e)
-        {
-            txtExpression.Text = "";
-            txtResult.Text = "";
-            firstNumber = 0;
-            currentOperator = "";
-            isNewInput = true;
-            isResult = false;
-        }
-
-        private void BtnCE_Click(object sender, EventArgs e)
-        {
-            isResult = false;
-            if (currentOperator == "")
-            {
-                txtExpression.Text = "";
-                txtResult.Text = "";
-            }
-            else
-            {
-                string prefix = firstNumber.ToString() + " " + currentOperator + " ";
-                txtExpression.Text = prefix;
-                txtResult.Text = firstNumber.ToString();
-            }
-            isNewInput = true;
-        }
-
-        private void BtnDel_Click(object sender, EventArgs e)
-        {
-            if (isResult) return; // 결과 표시 중엔 Del 무시
-            if (txtExpression.Text.Length > 0)
-                txtExpression.Text = txtExpression.Text.Substring(0, txtExpression.Text.Length - 1);
-            UpdateCurrentNumberDisplay();
-            ScrollToEnd();
-        }
-
-        private void BtnEqual_Click(object sender, EventArgs e)
-        {
-            // 연산자 없거나 두 번째 숫자 미입력 상태면 무시
-            if (currentOperator == "" || isNewInput || isResult) return;
-
-            string delimiter = " " + currentOperator + " ";
-            string[] parts = txtExpression.Text.Split(new string[] { delimiter }, StringSplitOptions.None);
-            if (parts.Length < 2) return;
-            if (!int.TryParse(parts[1].Trim(), out int secondNumber)) return;
-
-            int result = 0;
-            switch (currentOperator)
-            {
-                case "+": result = firstNumber + secondNumber; break;
-                case "-": result = firstNumber - secondNumber; break;
-                case "x": result = firstNumber * secondNumber; break;
-                case "÷":
-                    if (secondNumber == 0)
-                    {
-                        txtExpression.Text = "0으로 나눌 수 없습니다";
-                        txtResult.Text = "";
-                        firstNumber = 0;
-                        currentOperator = "";
-                        isNewInput = true;
-                        return;
-                    }
-                    result = firstNumber / secondNumber;
-                    break;
-                default: return;
-            }
-
-            txtExpression.Text += " = " + result.ToString();
-            txtResult.Text = result.ToString();
-            isNewInput = true;
-            isResult = true;
         }
     }
 }
