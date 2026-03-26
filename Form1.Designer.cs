@@ -43,7 +43,7 @@ namespace SimpleCalculator
             // lblTitle
             lblTitle.AutoSize = false;
             lblTitle.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
-            lblTitle.ForeColor = Color.RoyalBlue;
+            lblTitle.ForeColor = Color.DarkOrange;
             lblTitle.Location = new Point(20, 10);
             lblTitle.Size = new Size(360, 50);
             lblTitle.Text = "Simple Calculator";
