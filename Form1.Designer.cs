@@ -23,14 +23,17 @@ namespace SimpleCalculator
             btn7 = new Button();
             btn8 = new Button();
             btn9 = new Button();
+            btnDiv = new Button();
             btn4 = new Button();
             btn5 = new Button();
             btn6 = new Button();
+            btnMul = new Button();
             btn1 = new Button();
             btn2 = new Button();
             btn3 = new Button();
-            btnAdd = new Button();
+            btnSub = new Button();
             btn0 = new Button();
+            btnAdd = new Button();
             btnEqual = new Button();
             SuspendLayout();
 
@@ -60,24 +63,27 @@ namespace SimpleCalculator
             int bw = 80, bh = 45, gap = 10;
             int startX = 20, startY = 145;
 
-            // Row 1: 7, 8, 9, +
+            // Row 1: 7, 8, 9, ÷
             SetBtn(btn7,   "7", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY, bw, bh);
             SetBtn(btn8,   "8", Color.WhiteSmoke, Color.RoyalBlue, startX+bw+gap,     startY, bw, bh);
             SetBtn(btn9,   "9", Color.WhiteSmoke, Color.RoyalBlue, startX+(bw+gap)*2, startY, bw, bh);
-            SetBtn(btnAdd, "+", Color.WhiteSmoke, Color.OrangeRed, startX+(bw+gap)*3, startY, bw, bh);
+            SetBtn(btnDiv, "÷", Color.WhiteSmoke, Color.OrangeRed, startX+(bw+gap)*3, startY, bw, bh);
 
-            // Row 2: 4, 5, 6
-            SetBtn(btn4, "4", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY+(bh+gap),   bw, bh);
-            SetBtn(btn5, "5", Color.WhiteSmoke, Color.RoyalBlue, startX+bw+gap,     startY+(bh+gap),   bw, bh);
-            SetBtn(btn6, "6", Color.WhiteSmoke, Color.RoyalBlue, startX+(bw+gap)*2, startY+(bh+gap),   bw, bh);
+            // Row 2: 4, 5, 6, x
+            SetBtn(btn4,   "4", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY+(bh+gap), bw, bh);
+            SetBtn(btn5,   "5", Color.WhiteSmoke, Color.RoyalBlue, startX+bw+gap,     startY+(bh+gap), bw, bh);
+            SetBtn(btn6,   "6", Color.WhiteSmoke, Color.RoyalBlue, startX+(bw+gap)*2, startY+(bh+gap), bw, bh);
+            SetBtn(btnMul, "x", Color.WhiteSmoke, Color.OrangeRed, startX+(bw+gap)*3, startY+(bh+gap), bw, bh);
 
-            // Row 3: 1, 2, 3
-            SetBtn(btn1, "1", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY+(bh+gap)*2, bw, bh);
-            SetBtn(btn2, "2", Color.WhiteSmoke, Color.RoyalBlue, startX+bw+gap,     startY+(bh+gap)*2, bw, bh);
-            SetBtn(btn3, "3", Color.WhiteSmoke, Color.RoyalBlue, startX+(bw+gap)*2, startY+(bh+gap)*2, bw, bh);
+            // Row 3: 1, 2, 3, -
+            SetBtn(btn1,   "1", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY+(bh+gap)*2, bw, bh);
+            SetBtn(btn2,   "2", Color.WhiteSmoke, Color.RoyalBlue, startX+bw+gap,     startY+(bh+gap)*2, bw, bh);
+            SetBtn(btn3,   "3", Color.WhiteSmoke, Color.RoyalBlue, startX+(bw+gap)*2, startY+(bh+gap)*2, bw, bh);
+            SetBtn(btnSub, "-", Color.WhiteSmoke, Color.OrangeRed, startX+(bw+gap)*3, startY+(bh+gap)*2, bw, bh);
 
-            // Row 4: 0, =
+            // Row 4: 0, +, =
             SetBtn(btn0,     "0", Color.WhiteSmoke, Color.RoyalBlue, startX,            startY+(bh+gap)*3, bw, bh);
+            SetBtn(btnAdd,   "+", Color.WhiteSmoke, Color.OrangeRed, startX+(bw+gap)*2, startY+(bh+gap)*3, bw, bh);
             SetBtn(btnEqual, "=", Color.WhiteSmoke, Color.Black,     startX+(bw+gap)*3, startY+(bh+gap)*3, bw, bh);
 
             // 이벤트 연결
@@ -91,13 +97,16 @@ namespace SimpleCalculator
             btn7.Click += BtnNumber_Click;
             btn8.Click += BtnNumber_Click;
             btn9.Click += BtnNumber_Click;
-            btnAdd.Click += BtnAdd_Click;
+            btnAdd.Click += BtnOperator_Click;
+            btnSub.Click += BtnOperator_Click;
+            btnMul.Click += BtnOperator_Click;
+            btnDiv.Click += BtnOperator_Click;
             btnEqual.Click += BtnEqual_Click;
 
             // Form
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(400, 360);
+            ClientSize = new Size(400, 370);
             Text = "Calculator v1.0";
             BackColor = Color.White;
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -106,10 +115,10 @@ namespace SimpleCalculator
             Controls.Add(lblTitle);
             Controls.Add(txtExpression);
             Controls.Add(txtResult);
-            Controls.Add(btn7); Controls.Add(btn8); Controls.Add(btn9); Controls.Add(btnAdd);
-            Controls.Add(btn4); Controls.Add(btn5); Controls.Add(btn6);
-            Controls.Add(btn1); Controls.Add(btn2); Controls.Add(btn3);
-            Controls.Add(btn0); Controls.Add(btnEqual);
+            Controls.Add(btn7); Controls.Add(btn8); Controls.Add(btn9); Controls.Add(btnDiv);
+            Controls.Add(btn4); Controls.Add(btn5); Controls.Add(btn6); Controls.Add(btnMul);
+            Controls.Add(btn1); Controls.Add(btn2); Controls.Add(btn3); Controls.Add(btnSub);
+            Controls.Add(btn0); Controls.Add(btnAdd); Controls.Add(btnEqual);
 
             ResumeLayout(false);
         }
@@ -132,9 +141,9 @@ namespace SimpleCalculator
         private Label lblTitle;
         private TextBox txtExpression;
         private TextBox txtResult;
-        private Button btn7, btn8, btn9, btnAdd;
-        private Button btn4, btn5, btn6;
-        private Button btn1, btn2, btn3;
-        private Button btn0, btnEqual;
+        private Button btn7, btn8, btn9, btnDiv;
+        private Button btn4, btn5, btn6, btnMul;
+        private Button btn1, btn2, btn3, btnSub;
+        private Button btn0, btnAdd, btnEqual;
     }
 }

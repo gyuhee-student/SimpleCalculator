@@ -3,6 +3,7 @@ namespace SimpleCalculator
     public partial class Form1 : Form
     {
         private int firstNumber = 0;
+        private string currentOperator = "";
         private bool isNewInput = true;
 
         public Form1()
@@ -21,18 +22,28 @@ namespace SimpleCalculator
             txtExpression.Text += digit;
         }
 
-        private void BtnAdd_Click(object sender, EventArgs e)
+        private void BtnOperator_Click(object sender, EventArgs e)
         {
+            Button btn = (Button)sender;
+            currentOperator = btn.Text;
             firstNumber = int.Parse(txtExpression.Text.Trim());
-            txtExpression.Text += " + ";
+            txtExpression.Text += " " + currentOperator + " ";
             isNewInput = true;
         }
 
         private void BtnEqual_Click(object sender, EventArgs e)
         {
-            string[] parts = txtExpression.Text.Split('+');
+            string[] parts = txtExpression.Text.Split(currentOperator);
             int secondNumber = int.Parse(parts[1].Trim());
-            int result = firstNumber + secondNumber;
+            int result = 0;
+
+            switch (currentOperator)
+            {
+                case "+": result = firstNumber + secondNumber; break;
+                case "-": result = firstNumber - secondNumber; break;
+                case "x": result = firstNumber * secondNumber; break;
+                case "÷": result = firstNumber / secondNumber; break;
+            }
 
             txtExpression.Text += " = " + result.ToString();
             txtResult.Text = result.ToString();
