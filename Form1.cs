@@ -2,10 +2,10 @@ namespace SimpleCalculator
 {
     public partial class Form1 : Form
     {
-        private List<int> numbers = new List<int>();
-        private List<string> operators = new List<string>();
+        private List<string> tokens = new List<string>();
         private string currentInput = "";
         private bool isResult = false;
+        private int parenDepth = 0;
 
         public Form1()
         {
@@ -23,6 +23,8 @@ namespace SimpleCalculator
             else if (e.KeyChar == '-') btnSub.PerformClick();
             else if (e.KeyChar == '*') btnMul.PerformClick();
             else if (e.KeyChar == '/') btnDiv.PerformClick();
+            else if (e.KeyChar == '(') btnOpenParen.PerformClick();
+            else if (e.KeyChar == ')') btnCloseParen.PerformClick();
             else if (e.KeyChar == '=') btnEqual.PerformClick();
         }
 
@@ -33,15 +35,24 @@ namespace SimpleCalculator
             else if (e.KeyCode == Keys.Back) btnDel.PerformClick();
         }
 
+        private bool IsOperator(string tok) =>
+            tok == "+" || tok == "-" || tok == "x" || tok == "÷";
+
+        private string LastToken() =>
+            tokens.Count > 0 ? tokens[tokens.Count - 1] : "";
+
         private void SimulateNumberClick(string digit)
         {
             if (isResult)
             {
-                numbers.Clear();
-                operators.Clear();
+                tokens.Clear();
                 currentInput = "";
                 isResult = false;
+                parenDepth = 0;
             }
+            // 닫는 괄호 바로 뒤 숫자 → 암묵적 곱하기 삽입
+            if (LastToken() == ")")
+                tokens.Add("x");
             if (currentInput == "0") return; // 선행 0 방지
             currentInput += digit;
             UpdateDisplay();
@@ -52,39 +63,91 @@ namespace SimpleCalculator
             SimulateNumberClick(((Button)sender).Text);
         }
 
+        private void BtnOpenParen_Click(object sender, EventArgs e)
+        {
+            if (isResult)
+            {
+                tokens.Clear();
+                currentInput = "";
+                isResult = false;
+                parenDepth = 0;
+            }
+            // 숫자 입력 중이면 → 암묵적 곱하기 삽입 후 (
+            if (currentInput != "")
+            {
+                tokens.Add(currentInput);
+                currentInput = "";
+                tokens.Add("x");
+            }
+            else
+            {
+                string last = LastToken();
+                // 닫는 괄호나 숫자 토큰 뒤에도 암묵적 곱하기
+                if (last == ")" || int.TryParse(last, out _))
+                    tokens.Add("x");
+                else if (last != "" && last != "(" && !IsOperator(last))
+                    return;
+            }
+
+            tokens.Add("(");
+            parenDepth++;
+            UpdateDisplay();
+        }
+
+        private void BtnCloseParen_Click(object sender, EventArgs e)
+        {
+            if (parenDepth == 0) return;
+            // 괄호 안에 아무것도 없거나 연산자로 끝난 상태면 무시
+            if (currentInput == "" && (LastToken() == "(" || IsOperator(LastToken()))) return;
+
+            if (currentInput != "")
+            {
+                tokens.Add(currentInput);
+                currentInput = "";
+            }
+            tokens.Add(")");
+            parenDepth--;
+            UpdateDisplay();
+        }
+
         private void BtnOperator_Click(object sender, EventArgs e)
         {
             string newOp = ((Button)sender).Text;
 
             if (isResult)
             {
-                // 결과 상태에서 연산자 누름 → 결과를 첫 번째 수로 이어서 계산
-                if (!int.TryParse(txtResult.Text, out int val)) return;
-                numbers.Clear();
-                operators.Clear();
-                numbers.Add(val);
+                // 결과 상태에서 연산자 누름 → 결과를 첫 번째 토큰으로 이어서 계산
+                tokens.Clear();
+                tokens.Add(txtResult.Text);
                 currentInput = "";
                 isResult = false;
-                operators.Add(newOp);
+                parenDepth = 0;
+                tokens.Add(newOp);
                 UpdateDisplay();
                 return;
             }
 
-            if (currentInput == "" && numbers.Count == 0) return;
+            if (currentInput == "" && tokens.Count == 0) return;
+
+            string last = LastToken();
 
             if (currentInput != "")
             {
-                if (!int.TryParse(currentInput, out int num)) return;
-                numbers.Add(num);
+                tokens.Add(currentInput);
                 currentInput = "";
-                operators.Add(newOp);
+                tokens.Add(newOp);
             }
-            else
+            else if (last == ")")
             {
-                // 숫자 입력 없이 연산자만 다시 누름 → 마지막 연산자 교체
-                if (operators.Count > 0)
-                    operators[operators.Count - 1] = newOp;
+                // 닫는 괄호 뒤 연산자
+                tokens.Add(newOp);
             }
+            else if (IsOperator(last))
+            {
+                // 연산자 연속 입력 → 마지막 연산자 교체
+                tokens[tokens.Count - 1] = newOp;
+            }
+            // 여는 괄호 바로 뒤 연산자는 무시
 
             UpdateDisplay();
         }
@@ -92,67 +155,120 @@ namespace SimpleCalculator
         private void BtnEqual_Click(object sender, EventArgs e)
         {
             if (isResult) return;
-            if (currentInput == "" || operators.Count == 0) return;
-            if (!int.TryParse(currentInput, out int lastNum)) return;
 
-            var allNums = new List<int>(numbers) { lastNum };
-            string expr = BuildExpression(allNums, operators, "");
+            var evalTokens = new List<string>(tokens);
+            if (currentInput != "")
+                evalTokens.Add(currentInput);
+
+            if (evalTokens.Count == 0) return;
+            // 연산자 없이 숫자만 있으면 무시
+            bool hasOperator = evalTokens.Exists(t => IsOperator(t));
+            if (!hasOperator) return;
+
+            // 열린 괄호 자동으로 닫기
+            for (int i = 0; i < parenDepth; i++)
+                evalTokens.Add(")");
+
+            string expr = BuildExpression(evalTokens, "");
 
             try
             {
-                int result = Evaluate(new List<int>(allNums), new List<string>(operators));
+                int result = EvaluateTokens(evalTokens);
                 txtExpression.Text = expr + " = " + result;
                 txtResult.Text = result.ToString();
-                numbers.Clear();
-                operators.Clear();
+                tokens.Clear();
                 currentInput = "";
+                parenDepth = 0;
                 isResult = true;
             }
             catch (DivideByZeroException)
             {
                 txtExpression.Text = "0으로 나눌 수 없습니다";
                 txtResult.Text = "";
-                numbers.Clear();
-                operators.Clear();
+                tokens.Clear();
                 currentInput = "";
+                parenDepth = 0;
                 isResult = false;
             }
             ScrollToEnd();
         }
 
-        private int Evaluate(List<int> nums, List<string> ops)
+        private int EvaluateTokens(List<string> toks)
         {
-            // 1단계: 곱하기·나누기 먼저 처리
-            int i = 0;
-            while (i < ops.Count)
+            // Shunting-yard 알고리즘으로 중위 표기를 후위 표기로 변환 후 계산
+            var output = new Queue<string>();
+            var opStack = new Stack<string>();
+
+            int Precedence(string op)
             {
-                if (ops[i] == "x" || ops[i] == "÷")
-                {
-                    if (ops[i] == "÷" && nums[i + 1] == 0)
-                        throw new DivideByZeroException();
-                    int res = ops[i] == "x" ? nums[i] * nums[i + 1] : nums[i] / nums[i + 1];
-                    nums[i] = res;
-                    nums.RemoveAt(i + 1);
-                    ops.RemoveAt(i);
-                }
-                else i++;
+                if (op == "+" || op == "-") return 1;
+                if (op == "x" || op == "÷") return 2;
+                return 0;
             }
 
-            // 2단계: 더하기·빼기 처리
-            int total = nums[0];
-            for (int j = 0; j < ops.Count; j++)
-                total = ops[j] == "+" ? total + nums[j + 1] : total - nums[j + 1];
-            return total;
+            foreach (var tok in toks)
+            {
+                if (int.TryParse(tok, out _))
+                {
+                    output.Enqueue(tok);
+                }
+                else if (tok == "(")
+                {
+                    opStack.Push(tok);
+                }
+                else if (tok == ")")
+                {
+                    while (opStack.Count > 0 && opStack.Peek() != "(")
+                        output.Enqueue(opStack.Pop());
+                    if (opStack.Count > 0) opStack.Pop(); // ( 제거
+                }
+                else // 연산자
+                {
+                    while (opStack.Count > 0 && opStack.Peek() != "(" &&
+                           Precedence(opStack.Peek()) >= Precedence(tok))
+                        output.Enqueue(opStack.Pop());
+                    opStack.Push(tok);
+                }
+            }
+            while (opStack.Count > 0)
+                output.Enqueue(opStack.Pop());
+
+            // 후위 표기 계산
+            var evalStack = new Stack<int>();
+            while (output.Count > 0)
+            {
+                string tok = output.Dequeue();
+                if (int.TryParse(tok, out int num))
+                {
+                    evalStack.Push(num);
+                }
+                else
+                {
+                    int b = evalStack.Pop(), a = evalStack.Pop();
+                    switch (tok)
+                    {
+                        case "+": evalStack.Push(a + b); break;
+                        case "-": evalStack.Push(a - b); break;
+                        case "x": evalStack.Push(a * b); break;
+                        case "÷":
+                            if (b == 0) throw new DivideByZeroException();
+                            evalStack.Push(a / b);
+                            break;
+                    }
+                }
+            }
+            return evalStack.Pop();
         }
 
-        private string BuildExpression(List<int> nums, List<string> ops, string curIn)
+        private string BuildExpression(List<string> toks, string curIn)
         {
             string result = "";
-            for (int i = 0; i < nums.Count; i++)
+            foreach (var tok in toks)
             {
-                result += nums[i].ToString();
-                if (i < ops.Count)
-                    result += " " + ops[i] + " ";
+                if (tok == "(") result += "(";
+                else if (tok == ")") result += ")";
+                else if (IsOperator(tok)) result += " " + tok + " ";
+                else result += tok;
             }
             result += curIn;
             return result;
@@ -160,9 +276,14 @@ namespace SimpleCalculator
 
         private void UpdateDisplay()
         {
-            txtExpression.Text = BuildExpression(numbers, operators, currentInput);
-            txtResult.Text = currentInput != "" ? currentInput :
-                             (numbers.Count > 0 ? numbers[numbers.Count - 1].ToString() : "");
+            txtExpression.Text = BuildExpression(tokens, currentInput);
+            if (currentInput != "")
+                txtResult.Text = currentInput;
+            else
+            {
+                string last = LastToken();
+                txtResult.Text = int.TryParse(last, out _) ? last : "";
+            }
             ScrollToEnd();
         }
 
@@ -174,10 +295,10 @@ namespace SimpleCalculator
 
         private void BtnC_Click(object sender, EventArgs e)
         {
-            numbers.Clear();
-            operators.Clear();
+            tokens.Clear();
             currentInput = "";
             isResult = false;
+            parenDepth = 0;
             txtExpression.Text = "";
             txtResult.Text = "";
         }
@@ -185,19 +306,18 @@ namespace SimpleCalculator
         private void BtnCE_Click(object sender, EventArgs e)
         {
             isResult = false;
-            if (operators.Count == 0)
+            if (currentInput != "")
             {
-                numbers.Clear();
                 currentInput = "";
-                txtExpression.Text = "";
-                txtResult.Text = "";
             }
-            else
+            else if (tokens.Count > 0)
             {
-                // 현재 입력 중인 피연산자만 삭제
-                currentInput = "";
-                UpdateDisplay();
+                string last = LastToken();
+                tokens.RemoveAt(tokens.Count - 1);
+                if (last == ")") parenDepth++;
+                else if (last == "(") parenDepth--;
             }
+            UpdateDisplay();
         }
 
         private void BtnDel_Click(object sender, EventArgs e)
@@ -207,15 +327,13 @@ namespace SimpleCalculator
             {
                 currentInput = currentInput.Substring(0, currentInput.Length - 1);
             }
-            else if (operators.Count > 0)
+            else if (tokens.Count > 0)
             {
-                // 연산자 삭제 → 이전 숫자를 currentInput으로 복원
-                operators.RemoveAt(operators.Count - 1);
-                if (numbers.Count > 0)
-                {
-                    currentInput = numbers[numbers.Count - 1].ToString();
-                    numbers.RemoveAt(numbers.Count - 1);
-                }
+                string last = LastToken();
+                tokens.RemoveAt(tokens.Count - 1);
+                if (last == ")") parenDepth++;
+                else if (last == "(") parenDepth--;
+                else if (int.TryParse(last, out _)) currentInput = last; // 숫자 토큰은 currentInput으로 복원
             }
             UpdateDisplay();
         }

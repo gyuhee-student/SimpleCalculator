@@ -36,6 +36,8 @@ namespace SimpleCalculator
             btn3 = new Button();
             btnSub = new Button();
             btn0 = new Button();
+            btnOpenParen = new Button();
+            btnCloseParen = new Button();
             btnAdd = new Button();
             btnEqual = new Button();
             SuspendLayout();
@@ -255,6 +257,30 @@ namespace SimpleCalculator
             btn0.Text = "0";
             btn0.Click += BtnNumber_Click;
 
+            // btnOpenParen
+            btnOpenParen.BackColor = Color.WhiteSmoke;
+            btnOpenParen.Cursor = Cursors.Hand;
+            btnOpenParen.FlatStyle = FlatStyle.Flat;
+            btnOpenParen.FlatAppearance.BorderColor = Color.LightGray;
+            btnOpenParen.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            btnOpenParen.ForeColor = Color.DarkOrange;
+            btnOpenParen.Location = new Point(110, 365);
+            btnOpenParen.Size = new Size(80, 45);
+            btnOpenParen.Text = "(";
+            btnOpenParen.Click += BtnOpenParen_Click;
+
+            // btnCloseParen
+            btnCloseParen.BackColor = Color.WhiteSmoke;
+            btnCloseParen.Cursor = Cursors.Hand;
+            btnCloseParen.FlatStyle = FlatStyle.Flat;
+            btnCloseParen.FlatAppearance.BorderColor = Color.LightGray;
+            btnCloseParen.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            btnCloseParen.ForeColor = Color.DarkOrange;
+            btnCloseParen.Location = new Point(200, 365);
+            btnCloseParen.Size = new Size(80, 45);
+            btnCloseParen.Text = ")";
+            btnCloseParen.Click += BtnCloseParen_Click;
+
             // btnAdd
             btnAdd.BackColor = Color.WhiteSmoke;
             btnAdd.Cursor = Cursors.Hand;
@@ -295,7 +321,7 @@ namespace SimpleCalculator
             Controls.Add(btn7); Controls.Add(btn8); Controls.Add(btn9); Controls.Add(btnDiv);
             Controls.Add(btn4); Controls.Add(btn5); Controls.Add(btn6); Controls.Add(btnMul);
             Controls.Add(btn1); Controls.Add(btn2); Controls.Add(btn3); Controls.Add(btnSub);
-            Controls.Add(btn0); Controls.Add(btnAdd); Controls.Add(btnEqual);
+            Controls.Add(btn0); Controls.Add(btnOpenParen); Controls.Add(btnCloseParen); Controls.Add(btnAdd); Controls.Add(btnEqual);
 
             ResumeLayout(false);
         }
@@ -309,6 +335,6 @@ namespace SimpleCalculator
         private Button btn7, btn8, btn9, btnDiv;
         private Button btn4, btn5, btn6, btnMul;
         private Button btn1, btn2, btn3, btnSub;
-        private Button btn0, btnAdd, btnEqual;
+        private Button btn0, btnOpenParen, btnCloseParen, btnAdd, btnEqual;
     }
 }
