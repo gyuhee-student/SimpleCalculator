@@ -31,6 +31,29 @@ namespace SimpleCalculator
             isNewInput = true;
         }
 
+        private void BtnC_Click(object sender, EventArgs e)
+        {
+            txtExpression.Text = "";
+            txtResult.Text = "";
+            firstNumber = 0;
+            currentOperator = "";
+            isNewInput = true;
+        }
+
+        private void BtnCE_Click(object sender, EventArgs e)
+        {
+            if (currentOperator == "")
+            {
+                txtExpression.Text = "";
+            }
+            else
+            {
+                string prefix = firstNumber.ToString() + " " + currentOperator + " ";
+                txtExpression.Text = prefix;
+            }
+            isNewInput = true;
+        }
+
         private void BtnEqual_Click(object sender, EventArgs e)
         {
             string[] parts = txtExpression.Text.Split(currentOperator);
