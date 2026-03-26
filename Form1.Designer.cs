@@ -37,6 +37,7 @@ namespace SimpleCalculator
             btnEqual = new Button();
             btnC = new Button();
             btnCE = new Button();
+            btnDel = new Button();
             SuspendLayout();
 
             // lblTitle
@@ -62,9 +63,10 @@ namespace SimpleCalculator
             txtResult.ReadOnly = true;
             txtResult.TabStop = false;
 
-            // Row 0: CE, C  (y=145)
-            SetBtn(btnCE, "CE", Color.WhiteSmoke, Color.Black,     20,  145, 80, 45);
-            SetBtn(btnC,  "C",  Color.WhiteSmoke, Color.Black,     110, 145, 80, 45);
+            // Row 0: CE, C, Del  (y=145)
+            SetBtn(btnCE,  "CE",  Color.WhiteSmoke, Color.Black, 20,  145, 80, 45);
+            SetBtn(btnC,   "C",   Color.WhiteSmoke, Color.Black, 110, 145, 80, 45);
+            SetBtn(btnDel, "del", Color.WhiteSmoke, Color.Black, 200, 145, 80, 45);
 
             // Row 1: 7, 8, 9, ÷  (y=200)
             SetBtn(btn7,   "7", Color.WhiteSmoke, Color.RoyalBlue, 20,  200, 80, 45);
@@ -107,6 +109,7 @@ namespace SimpleCalculator
             btnEqual.Click += BtnEqual_Click;
             btnC.Click += BtnC_Click;
             btnCE.Click += BtnCE_Click;
+            btnDel.Click += BtnDel_Click;
 
             // Form
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -124,7 +127,7 @@ namespace SimpleCalculator
             Controls.Add(btn4); Controls.Add(btn5); Controls.Add(btn6); Controls.Add(btnMul);
             Controls.Add(btn1); Controls.Add(btn2); Controls.Add(btn3); Controls.Add(btnSub);
             Controls.Add(btn0); Controls.Add(btnAdd); Controls.Add(btnEqual);
-            Controls.Add(btnCE); Controls.Add(btnC);
+            Controls.Add(btnCE); Controls.Add(btnC); Controls.Add(btnDel);
 
             ResumeLayout(false);
         }
@@ -151,6 +154,6 @@ namespace SimpleCalculator
         private Button btn4, btn5, btn6, btnMul;
         private Button btn1, btn2, btn3, btnSub;
         private Button btn0, btnAdd, btnEqual;
-        private Button btnC, btnCE;
+        private Button btnC, btnCE, btnDel;
     }
 }

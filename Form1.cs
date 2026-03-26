@@ -54,6 +54,12 @@ namespace SimpleCalculator
             isNewInput = true;
         }
 
+        private void BtnDel_Click(object sender, EventArgs e)
+        {
+            if (txtExpression.Text.Length > 0)
+                txtExpression.Text = txtExpression.Text.Substring(0, txtExpression.Text.Length - 1);
+        }
+
         private void BtnEqual_Click(object sender, EventArgs e)
         {
             string[] parts = txtExpression.Text.Split(currentOperator);
