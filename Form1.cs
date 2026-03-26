@@ -101,22 +101,32 @@ namespace SimpleCalculator
 
             if (isResult)
             {
-                firstNumber = int.Parse(txtResult.Text);
+                // 결과 상태에서 연산자 누름 → 결과를 첫 번째 수로 이어서 계산
+                if (!int.TryParse(txtResult.Text, out firstNumber)) return;
                 txtExpression.Text = txtResult.Text + " " + newOperator + " ";
                 txtResult.Text = "";
                 isResult = false;
             }
             else if (currentOperator != "" && !isNewInput)
             {
+                // 두 번째 숫자까지 입력된 상태 → 중간 계산 후 연속 연산
                 BtnEqual_Click(null, EventArgs.Empty);
-                firstNumber = int.Parse(txtResult.Text);
+                if (!int.TryParse(txtResult.Text, out firstNumber)) return;
                 txtExpression.Text = txtResult.Text + " " + newOperator + " ";
                 txtResult.Text = "";
                 isResult = false;
             }
+            else if (currentOperator != "" && isNewInput)
+            {
+                // 숫자 입력 없이 연산자만 다시 누름 → 연산자만 교체
+                txtExpression.Text = firstNumber.ToString() + " " + newOperator + " ";
+            }
             else
             {
-                firstNumber = int.Parse(txtExpression.Text.Trim());
+                // 첫 번째 연산자 입력
+                string raw = txtExpression.Text.Trim();
+                if (raw == "") return;
+                if (!int.TryParse(raw, out firstNumber)) return;
                 txtExpression.Text += " " + newOperator + " ";
             }
 
@@ -157,10 +167,15 @@ namespace SimpleCalculator
 
         private void BtnEqual_Click(object sender, EventArgs e)
         {
-            string[] parts = txtExpression.Text.Split(currentOperator);
-            int secondNumber = int.Parse(parts[1].Trim());
-            int result = 0;
+            // 연산자 없거나 두 번째 숫자 미입력 상태면 무시
+            if (currentOperator == "" || isNewInput || isResult) return;
 
+            string delimiter = " " + currentOperator + " ";
+            string[] parts = txtExpression.Text.Split(new string[] { delimiter }, StringSplitOptions.None);
+            if (parts.Length < 2) return;
+            if (!int.TryParse(parts[1].Trim(), out int secondNumber)) return;
+
+            int result = 0;
             switch (currentOperator)
             {
                 case "+": result = firstNumber + secondNumber; break;
@@ -178,6 +193,7 @@ namespace SimpleCalculator
                     }
                     result = firstNumber / secondNumber;
                     break;
+                default: return;
             }
 
             txtExpression.Text += " = " + result.ToString();
