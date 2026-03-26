@@ -5,6 +5,7 @@ namespace SimpleCalculator
         private int firstNumber = 0;
         private string currentOperator = "";
         private bool isNewInput = true;
+        private bool isResult = false;
 
         public Form1()
         {
@@ -85,9 +86,30 @@ namespace SimpleCalculator
         private void BtnOperator_Click(object sender, EventArgs e)
         {
             Button btn = (Button)sender;
-            currentOperator = btn.Text;
-            firstNumber = int.Parse(txtExpression.Text.Trim());
-            txtExpression.Text += " " + currentOperator + " ";
+            string newOperator = btn.Text;
+
+            if (isResult)
+            {
+                firstNumber = int.Parse(txtResult.Text);
+                txtExpression.Text = txtResult.Text + " " + newOperator + " ";
+                txtResult.Text = "";
+                isResult = false;
+            }
+            else if (currentOperator != "" && !isNewInput)
+            {
+                BtnEqual_Click(null, EventArgs.Empty);
+                firstNumber = int.Parse(txtResult.Text);
+                txtExpression.Text = txtResult.Text + " " + newOperator + " ";
+                txtResult.Text = "";
+                isResult = false;
+            }
+            else
+            {
+                firstNumber = int.Parse(txtExpression.Text.Trim());
+                txtExpression.Text += " " + newOperator + " ";
+            }
+
+            currentOperator = newOperator;
             isNewInput = true;
             ScrollToEnd();
         }
@@ -150,6 +172,7 @@ namespace SimpleCalculator
             txtExpression.Text += " = " + result.ToString();
             txtResult.Text = result.ToString();
             isNewInput = true;
+            isResult = true;
         }
     }
 }
