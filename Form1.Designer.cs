@@ -47,14 +47,14 @@ namespace SimpleCalculator
             lblTitle.TextAlign = ContentAlignment.MiddleCenter;
 
             // txtExpression
-            txtExpression.Font = new Font("Segoe UI", 12F);
+            txtExpression.Font = new Font("Segoe UI", 16F);
             txtExpression.Location = new Point(20, 65);
             txtExpression.Size = new Size(360, 30);
             txtExpression.ReadOnly = true;
             txtExpression.TabStop = false;
 
             // txtResult
-            txtResult.Font = new Font("Segoe UI", 12F);
+            txtResult.Font = new Font("Segoe UI", 16F);
             txtResult.Location = new Point(20, 100);
             txtResult.Size = new Size(360, 30);
             txtResult.ReadOnly = true;
@@ -128,7 +128,7 @@ namespace SimpleCalculator
             btn.Text = text;
             btn.BackColor = back;
             btn.ForeColor = fore;
-            btn.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btn.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             btn.Location = new Point(x, y);
             btn.Size = new Size(w, h);
             btn.FlatStyle = FlatStyle.Flat;
