@@ -44,10 +44,20 @@ namespace SimpleCalculator
             }
         }
 
+        private bool HasLeadingZero()
+        {
+            string text = txtExpression.Text;
+            int i = text.Length - 1;
+            while (i >= 0 && char.IsDigit(text[i])) i--;
+            string currentNum = text.Substring(i + 1);
+            return currentNum == "0";
+        }
+
         private void SimulateNumberClick(string digit)
         {
             if (isNewInput)
                 isNewInput = false;
+            if (HasLeadingZero()) return;
             txtExpression.Text += digit;
             ScrollToEnd();
         }
@@ -79,6 +89,7 @@ namespace SimpleCalculator
             if (isNewInput)
                 isNewInput = false;
 
+            if (HasLeadingZero()) return;
             txtExpression.Text += digit;
             ScrollToEnd();
         }
