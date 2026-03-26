@@ -9,6 +9,65 @@ namespace SimpleCalculator
         public Form1()
         {
             InitializeComponent();
+            this.KeyPreview = true;
+            this.KeyDown += Form1_KeyDown;
+            this.KeyPress += Form1_KeyPress;
+        }
+
+        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar >= '0' && e.KeyChar <= '9')
+            {
+                SimulateNumberClick(e.KeyChar.ToString());
+            }
+            else if (e.KeyChar == '+') btnAdd.PerformClick();
+            else if (e.KeyChar == '-') btnSub.PerformClick();
+            else if (e.KeyChar == '*') btnMul.PerformClick();
+            else if (e.KeyChar == '/') btnDiv.PerformClick();
+            else if (e.KeyChar == '=') btnEqual.PerformClick();
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnEqual.PerformClick();
+            }
+            else if (e.KeyCode == Keys.Delete)
+            {
+                btnC.PerformClick();
+            }
+            else if (e.KeyCode == Keys.Back)
+            {
+                btnDel.PerformClick();
+            }
+        }
+
+        private void SimulateNumberClick(string digit)
+        {
+            if (isNewInput)
+                isNewInput = false;
+            txtExpression.Text += digit;
+            ScrollToEnd();
+        }
+
+        private void ScrollToEnd()
+        {
+            txtExpression.SelectionStart = txtExpression.Text.Length;
+            txtExpression.ScrollToCaret();
+        }
+
+        private void SetBtn(Button btn, string text, Color back, Color fore, int x, int y, int w, int h)
+        {
+            btn.Text = text;
+            btn.BackColor = back;
+            btn.ForeColor = fore;
+            btn.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            btn.Location = new Point(x, y);
+            btn.Size = new Size(w, h);
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderColor = Color.LightGray;
+            btn.Cursor = Cursors.Hand;
         }
 
         private void BtnNumber_Click(object sender, EventArgs e)
@@ -20,6 +79,7 @@ namespace SimpleCalculator
                 isNewInput = false;
 
             txtExpression.Text += digit;
+            ScrollToEnd();
         }
 
         private void BtnOperator_Click(object sender, EventArgs e)
@@ -29,6 +89,7 @@ namespace SimpleCalculator
             firstNumber = int.Parse(txtExpression.Text.Trim());
             txtExpression.Text += " " + currentOperator + " ";
             isNewInput = true;
+            ScrollToEnd();
         }
 
         private void BtnC_Click(object sender, EventArgs e)
@@ -58,6 +119,7 @@ namespace SimpleCalculator
         {
             if (txtExpression.Text.Length > 0)
                 txtExpression.Text = txtExpression.Text.Substring(0, txtExpression.Text.Length - 1);
+            ScrollToEnd();
         }
 
         private void BtnEqual_Click(object sender, EventArgs e)
@@ -71,7 +133,18 @@ namespace SimpleCalculator
                 case "+": result = firstNumber + secondNumber; break;
                 case "-": result = firstNumber - secondNumber; break;
                 case "x": result = firstNumber * secondNumber; break;
-                case "÷": result = firstNumber / secondNumber; break;
+                case "÷":
+                    if (secondNumber == 0)
+                    {
+                        txtExpression.Text = "0으로 나눌 수 없습니다";
+                        txtResult.Text = "";
+                        firstNumber = 0;
+                        currentOperator = "";
+                        isNewInput = true;
+                        return;
+                    }
+                    result = firstNumber / secondNumber;
+                    break;
             }
 
             txtExpression.Text += " = " + result.ToString();
